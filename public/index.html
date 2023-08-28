@@ -6,12 +6,14 @@
     <title>Chat App</title>
 </head>
     <p>Chat App</p>
+    <button onclick="sendLocation()" id="locaton">Send location</button>
     
     <p id="message"></p>
     <form onsubmit="sendMessage(event)">
         <input name="message">
         <button>Send</button>
     </form>
+
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/chat.js"></script>
