@@ -25,8 +25,17 @@ function sendLocation(e) {
     });
 }
 
-const messageP = document.getElementById('message');
+const messages = document.getElementById('messages');
+const messageTemplate = document.getElementById('message-template').innerHTML;
+const locationMessageTemplate = document.getElementById('location-message-template').innerHTML;
 
 socket.on('message', (message) => {
-    messageP.innerText = message;
+    const html = Mustache.render(messageTemplate, {message})
+    messages.insertAdjacentHTML('beforeend', html)
+})
+
+socket.on('locationMessage', (url) => {
+    const html = Mustache.render(locationMessageTemplate, {url})
+    messages.insertAdjacentHTML('beforeend', html)
+    console.log(url)
 })

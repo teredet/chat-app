@@ -20,7 +20,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('sendLocation', (locObj, callback) => {
-        socket.broadcast.emit('message', `http://google.com/maps?q=${locObj.latitude},${locObj.longitude}`)
+        io.emit('locationMessage', `http://google.com/maps?q=${locObj.latitude},${locObj.longitude}`)
         callback('Success')
     })
 
