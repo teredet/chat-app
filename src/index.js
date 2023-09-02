@@ -2,6 +2,8 @@ import express from "express";
 import http from 'http';
 import { Server } from 'socket.io';
 
+import { generateMessage } from './utils/messages.js';
+
 
 const app = express();
 const server = http.createServer(app);
@@ -11,21 +13,24 @@ app.use(express.static('public'));
 
 io.on('connection', (socket) => {
     console.log('New WebSocket connection');
-    socket.emit('message', 'Welcome!')
-    socket.broadcast.emit('message', 'A new user has joined!')
+    socket.emit('message', generateMessage('Welcome!'))
+    socket.broadcast.emit('message', generateMessage('A new user has joined!'))
 
     socket.on('sendMessage', (message, callback) => {
-        io.emit('message', message);
+        io.emit('message', generateMessage(message));
         callback('Delivered');
     })
 
     socket.on('sendLocation', (locObj, callback) => {
-        io.emit('locationMessage', `http://google.com/maps?q=${locObj.latitude},${locObj.longitude}`)
+        io.emit('locationMessage', {
+            url:`http://google.com/maps?q=${locObj.latitude},${locObj.longitude}`,
+            timestamp: locObj.timestamp
+        })
         callback('Success')
     })
 
     socket.on('disconnect', () => {
-        io.emit('message', 'A user has left.')
+        io.emit('message', generateMessage('A user has left.'))
     })
 })
 
