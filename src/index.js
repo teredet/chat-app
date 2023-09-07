@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 
 import { generateMessage } from './utils/messages.js';
+import { addUser, removeUser, getUser, getUsersInRoom } from "./utils/users.js";
 
 
 const app = express();
@@ -13,24 +14,41 @@ app.use(express.static('public'));
 
 io.on('connection', (socket) => {
     console.log('New WebSocket connection');
-    socket.emit('message', generateMessage('Welcome!'))
-    socket.broadcast.emit('message', generateMessage('A new user has joined!'))
+
+    socket.on('join', (options, callback) => {
+        const { error, user } = addUser({ id: socket.id, ...options });
+        if (error) return callback(error);
+
+        socket.join(user.room);
+
+        socket.emit('message', generateMessage('Welcome!', 'System'))
+        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined!`, 'System'))
+
+        callback();
+    })
 
     socket.on('sendMessage', (message, callback) => {
-        io.emit('message', generateMessage(message));
+        const user = getUser(socket.id);
+
+        io.to(user.room).emit('message', generateMessage(message, user.username));
         callback('Delivered');
     })
 
     socket.on('sendLocation', (locObj, callback) => {
-        io.emit('locationMessage', {
-            url:`http://google.com/maps?q=${locObj.latitude},${locObj.longitude}`,
+        const user = getUser(socket.id);
+
+        io.to(user.room).emit('locationMessage', {
+            author: user.username,
+            url: `http://google.com/maps?q=${locObj.latitude},${locObj.longitude}`,
             timestamp: locObj.timestamp
         })
         callback('Success')
     })
 
     socket.on('disconnect', () => {
-        io.emit('message', generateMessage('A user has left.'))
+        const user = removeUser(socket.id);
+
+        if (user) io.to(user.room).emit('message', generateMessage(`${user.username} has left.`))
     })
 })
 
