@@ -25,6 +25,19 @@ function sendLocation(e) {
     });
 }
 
+function autoscroll() {
+    const newMessage = messages.lastElementChild;
+    const newMessageStyles = getComputedStyle(newMessage);
+    const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+    const newMessageHeight = newMessage.offsetHeight + newMessageMargin;
+
+    const visibleHeight = messages.offsetHeight;
+    const containerHeight = messages.scrollHeight;
+    const scrollOffset = messages.scrollTop + visibleHeight;
+
+    if ((containerHeight - newMessageHeight) <= scrollOffset) messages.scrollTop = messages.scrollHeight; 
+}
+
 const messages = document.getElementById('messages');
 const messageTemplate = document.getElementById('message-template').innerHTML;
 const locationMessageTemplate = document.getElementById('location-message-template').innerHTML;
@@ -33,13 +46,13 @@ const sidebarTemplate = document.getElementById('sidebar-template').innerHTML;
 const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
 
 socket.on('message', (data) => {
-    console.log(data)
     const html = Mustache.render(messageTemplate, {
         author: data.author,
         message: data.message,
         createdAt: moment(data.createdAt).format('hh:mm a')
     })
-    messages.insertAdjacentHTML('beforeend', html)
+    messages.insertAdjacentHTML('beforeend', html);
+    autoscroll();
 })
 
 socket.on('locationMessage', (data) => {
@@ -48,7 +61,8 @@ socket.on('locationMessage', (data) => {
         url: data.url,
         createdAt: moment(data.timestamp).format('hh:mm a')
     })
-    messages.insertAdjacentHTML('beforeend', html)
+    messages.insertAdjacentHTML('beforeend', html);
+    autoscroll();
 })
 
 socket.emit('join', { username, room }, (error) => {
